@@ -108,8 +108,7 @@ def _geolocator(location):
         return None
 
     try:
-        answer = json.loads(geo.encode('utf-8'))
-        return answer
+        return json.loads(geo.encode('utf-8'))
     except ValueError as exception:
         print("ERROR: %s" % exception)
         return None
@@ -308,9 +307,7 @@ def _load_iata_codes(iata_codes_filename):
     Load IATA codes from the IATA codes file
     """
     with open(iata_codes_filename, 'r') as f_iata_codes:
-        result = []
-        for line in f_iata_codes.readlines():
-            result.append(line.strip())
+        result = [line.strip() for line in f_iata_codes.readlines()]
     return set(result)
 
 
@@ -446,10 +443,7 @@ def location_processing(location, ip_addr):
                 override_location_name = location[1:].replace('+', ' ')
             location = "%s,%s" % (geolocation['latitude'], geolocation['longitude'])
             country = None
-            if not hide_full_address:
-                full_address = geolocation['address']
-            else:
-                full_address = None
+            full_address = geolocation['address'] if not hide_full_address else None
         else:
             location = NOT_FOUND_LOCATION #location[1:]
 
@@ -470,8 +464,7 @@ def _main_():
 
     for filename in glob.glob(os.path.join(IP2LCACHE, "*")):
         ip_address = os.path.basename(filename)
-        data = _ipcache(ip_address)
-        if data:
+        if data := _ipcache(ip_address):
             city, region, country = data
             if any(x in city for x in "0123456789"):
                 print(city)

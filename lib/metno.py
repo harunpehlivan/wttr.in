@@ -130,7 +130,7 @@ def to_16_point(degrees):
     # 360 degrees / 16 = 22.5 degrees of arc or 11.25 degrees around the point
     if degrees > (360 - 11.25) or degrees <= 11.25:
         return 'N'
-    if degrees > 11.25 and degrees <= (11.25 + 22.5):
+    if degrees <= 11.25 + 22.5:
         return 'NNE'
     if degrees > (11.25 + (22.5 * 1)) and degrees <= (11.25 + (22.5 * 2)):
         return 'NE'
@@ -205,7 +205,7 @@ def group_hours_to_days(lat, lng, hourlies, days_to_return):
         days[current_day_local]['hourly'].append(hour)
 
     # Need a second pass to build the min/max/avg data
-    for date, day in days.items():
+    for day in days.values():
         minTempC = -999
         maxTempC = 1000
         avgTempC = None
@@ -222,12 +222,14 @@ def group_hours_to_days(lat, lng, hourlies, days_to_return):
                 n = 1
             else:
                 avgTempC = ((avgTempC * n) + temp) / (n + 1)
-                n = n + 1
+                n += 1
 
             uv = hour['data']['instant']['details']
-            if 'ultraviolet_index_clear_sky' in uv:
-                if uv['ultraviolet_index_clear_sky'] > maxUvIndex:
-                    maxUvIndex = uv['ultraviolet_index_clear_sky']
+            if (
+                'ultraviolet_index_clear_sky' in uv
+                and uv['ultraviolet_index_clear_sky'] > maxUvIndex
+            ):
+                maxUvIndex = uv['ultraviolet_index_clear_sky']
         day["maxtempC"] = str(maxTempC)
         day["maxtempF"] = str(celsius_to_f(maxTempC))
         day["mintempC"] = str(minTempC)
@@ -356,10 +358,7 @@ def _convert_hour(hour):
 
 
 def _convert_hourly(hours):
-    converted_hours = []
-    for hour in hours:
-        converted_hours.append(_convert_hour(hour))
-    return converted_hours
+    return [_convert_hour(hour) for hour in hours]
 
 
 # Whatever is upstream is expecting data in the shape of WWO. This method will

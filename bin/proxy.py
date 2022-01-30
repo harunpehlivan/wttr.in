@@ -93,9 +93,7 @@ def _cache_file(path, query):
     expiry_interval = 60*(digest_number+90)
 
     timestamp = "%010d" % (int(time.time())//expiry_interval*expiry_interval)
-    filename = os.path.join(PROXY_CACHEDIR, timestamp, path, query)
-
-    return filename
+    return os.path.join(PROXY_CACHEDIR, timestamp, path, query)
 
 
 def _load_content_and_headers(path, query):

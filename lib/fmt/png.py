@@ -92,17 +92,11 @@ def _color_mapping(color, inverse=False):
     """
 
     if color == 'default':
-        if inverse:
-            return 'black'
-        return 'lightgray'
-
+        return 'black' if inverse else 'lightgray'
     if color in ['green', 'black', 'cyan', 'blue', 'brown']:
         return color
     try:
-        return (
-            int(color[0:2], 16),
-            int(color[2:4], 16),
-            int(color[4:6], 16))
+        return int(color[:2], 16), int(color[2:4], 16), int(color[4:6], 16)
     except (ValueError, IndexError):
         # if we do not know this color and it can not be decoded as RGB,
         # print it and return it as it is (will be displayed as black)
@@ -195,10 +189,7 @@ def _gen_term(buf, graphemes, options=None):
     buf = buf[-ROWS:]
 
     draw = ImageDraw.Draw(image)
-    font = {}
-    for cat in FONT_CAT:
-        font[cat] = ImageFont.truetype(FONT_CAT[cat], FONT_SIZE)
-
+    font = {cat: ImageFont.truetype(FONT_CAT[cat], FONT_SIZE) for cat in FONT_CAT}
     emojilib = _load_emojilib()
 
     x_pos = 0
@@ -245,12 +236,8 @@ def _gen_term(buf, graphemes, options=None):
         except ValueError:
             transparency = 255
 
-        if transparency < 0:
-            transparency = 0
-
-        if transparency > 255:
-            transparency = 255
-
+        transparency = max(transparency, 0)
+        transparency = min(transparency, 255)
         image = image.convert("RGBA")
         datas = image.getdata()
 

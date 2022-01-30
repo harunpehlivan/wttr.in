@@ -110,9 +110,7 @@ def render_condition_plain(data, query):
     """Plain text weather condition (x)
     """
 
-    weather_condition = WEATHER_SYMBOL_PLAIN[WWO_CODE[data['weatherCode']]]
-
-    return weather_condition
+    return WEATHER_SYMBOL_PLAIN[WWO_CODE[data['weatherCode']]]
 
 def render_humidity(data, query):
     """
@@ -176,15 +174,18 @@ def render_wind(data, query):
 
     if query.get('use_ms_for_wind', False):
         unit = 'm/s'
-        wind = u'%s%.1f%s' % (wind_direction, float(data['windspeedKmph'])/36.0*10.0, unit)
+        return u'%s%.1f%s' % (
+            wind_direction,
+            float(data['windspeedKmph']) / 36.0 * 10.0,
+            unit,
+        )
+
     elif query.get('use_imperial', False):
         unit = 'mph'
-        wind = u'%s%s%s' % (wind_direction, data['windspeedMiles'], unit)
+        return u'%s%s%s' % (wind_direction, data['windspeedMiles'], unit)
     else:
         unit = 'km/h'
-        wind = u'%s%s%s' % (wind_direction, data['windspeedKmph'], unit)
-
-    return wind
+        return u'%s%s%s' % (wind_direction, data['windspeedKmph'], unit)
 
 def render_location(data, query):
     """
@@ -304,12 +305,11 @@ def render_line(line, data, query):
                 .replace(hour=0, minute=0, second=0, microsecond=0)
         current_sun = sun(city.observer, date=datetime_day_start)
 
-        local_time_of = lambda x: city.timezone if x == "TZ" else \
+        return lambda x: city.timezone if x == "TZ" else \
                                      current_sun[x]\
                                     .replace(tzinfo=pytz.utc)\
                                     .astimezone(local_tz)\
                                     .strftime("%H:%M:%S")
-        return local_time_of
 
     def render_symbol(match):
         """
@@ -388,8 +388,7 @@ def wttr_line(query, parsed_query):
     lang = parsed_query['lang']
 
     data = get_weather_data(location, lang)
-    output = format_weather_data(query, parsed_query, data)
-    return output
+    return format_weather_data(query, parsed_query, data)
 
 def main():
     """

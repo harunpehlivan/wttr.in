@@ -43,16 +43,8 @@ class Limits(object):
         self.divisor = _time_caps(60, 3600, 86400)
         self.last_update = _time_caps(0, 0, 0)
 
-        if limits:
-            self.limit = _time_caps(*limits)
-        else:
-            self.limit = _time_caps(30, 600, 1000)
-
-        if whitelist:
-            self.whitelist = whitelist[:]
-        else:
-            self.whitelist = []
-
+        self.limit = _time_caps(*limits) if limits else _time_caps(30, 600, 1000)
+        self.whitelist = whitelist[:] if whitelist else []
         self.counter = {
             'min':      {},
             'hour':     {},

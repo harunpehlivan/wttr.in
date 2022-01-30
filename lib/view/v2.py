@@ -62,8 +62,7 @@ def get_data(config):
         '&q=%s&format=json&num_of_days=3&tp=3&lang=None'
     ) % (WWO_KEY, config["location"])
     text = requests.get(url).text
-    parsed_data = json.loads(text)
-    return parsed_data
+    return json.loads(text)
 
 def interpolate_data(input_data, max_width):
     """
@@ -84,8 +83,7 @@ def jq_query(query, data_parsed):
     """
 
     pyjq_data = pyjq.all(query, data_parsed)
-    data = list(map(float, pyjq_data))
-    return data
+    return list(map(float, pyjq_data))
 
 # }}}
 # utils {{{
@@ -213,8 +211,8 @@ def draw_time(geo_data):
 
     line = ["", ""]
 
+    part = u"─"*5 + u"┴" + u"─"*5
     for _ in range(3):
-        part = u"─"*5 + u"┴" + u"─"*5
         line[0] += part + u"┼" + part + u"╂"
     line[0] += "\n"
 
@@ -276,13 +274,9 @@ def draw_astronomical(city_name, geo_data, config):
             sunset = current_date + datetime.timedelta(hours=24)
 
         char = "."
-        if current_date < dawn:
+        if current_date < dawn or current_date > dusk:
             char = " "
-        elif current_date > dusk:
-            char = " "
-        elif dawn <= current_date and current_date <= sunrise:
-            char = u"─"
-        elif sunset <= current_date and current_date <= dusk:
+        elif current_date <= sunrise or sunset <= current_date:
             char = u"─"
         elif sunrise <= current_date and current_date <= sunset:
             char = u"━"
@@ -304,12 +298,7 @@ def draw_astronomical(city_name, geo_data, config):
         #    if time_interval in [0, 24, 48, 69]:
             moon_line += moon_phase_emoji # + " "
         elif time_interval % 3 == 0:
-            if time_interval not in [24,28]: #se:
-                moon_line += "   "
-            else:
-                moon_line += " "
-
-
+            moon_line += "   " if time_interval not in [24,28] else " "
     answer = moon_line + "\n" + answer + "\n"
     answer += "\n"
     return answer
@@ -317,10 +306,11 @@ def draw_astronomical(city_name, geo_data, config):
 # draw_emoji {{{
 def draw_emoji(data, config):
     answer = ""
-    if config.get("view") == "v2n":
-        weather_symbol = constants.WEATHER_SYMBOL_WI_NIGHT
-        weather_symbol_width_vte = constants.WEATHER_SYMBOL_WIDTH_VTE_WI
-    elif config.get("view") == "v2d":
+    if (
+        config.get("view") == "v2n"
+        or config.get("view") != "v2n"
+        and config.get("view") == "v2d"
+    ):
         weather_symbol = constants.WEATHER_SYMBOL_WI_NIGHT
         weather_symbol_width_vte = constants.WEATHER_SYMBOL_WIDTH_VTE_WI
     else:
@@ -433,10 +423,7 @@ def generate_panel(data_parsed, geo_data, config):
     weather_code_query = "[.data.weather[] | .hourly[]] | .[].weatherCode"
     wind_direction_query = "[.data.weather[] | .hourly[]] | .[].winddirDegree"
 
-    output = ""
-
-    output += "\n\n"
-
+    output = "" + "\n\n"
     output += draw_date(config, geo_data)
     output += "\n"
     output += "\n"
@@ -604,11 +591,7 @@ def main(query, parsed_query, data):
     html_output = parsed_query["html_output"]
 
     geo_data = get_geodata(location)
-    if data is None:
-        data_parsed = get_data(parsed_query)
-    else:
-        data_parsed = data
-
+    data_parsed = get_data(parsed_query) if data is None else data
     if html_output:
         parsed_query["text"] = "no"
         filename = "b_" + parse_query.serialize(parsed_query) + ".png"

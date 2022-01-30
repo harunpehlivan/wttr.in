@@ -5,12 +5,7 @@ AIRPORTS_DAT_FILE = '/home/igor/wttrin-geo/share/airports.dat'
 def load_aiports_index():
     file_ = open(AIRPORTS_DAT_FILE, "r")
     reader = csv.reader(file_)
-    airport_index = {}
-
-    for line in reader:
-        airport_index[line[4]] = line
-
-    return airport_index
+    return {line[4]: line for line in reader}
 
 AIRPORTS_INDEX = load_aiports_index()
 

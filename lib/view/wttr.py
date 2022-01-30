@@ -23,10 +23,7 @@ def get_wetter(parsed_query):
     html = parsed_query['html_output']
     lang = parsed_query['lang']
 
-    location_not_found = False
-    if location == NOT_FOUND_LOCATION:
-        location_not_found = True
-
+    location_not_found = location == NOT_FOUND_LOCATION
     stderr = ""
     returncode = 0
     if not location_not_found:
@@ -119,10 +116,9 @@ def _wego_postprocessing(location, parsed_query, stdout):
 
     first = stdout.splitlines()[0]
     rest = stdout.splitlines()[1:]
-    if parsed_query.get('no-caption', False):
-        if ':' in first:
-            first = first.split(":", 1)[1]
-            stdout = "\n".join([first.strip()] + rest) + "\n"
+    if parsed_query.get('no-caption', False) and ':' in first:
+        first = first.split(":", 1)[1]
+        stdout = "\n".join([first.strip()] + rest) + "\n"
 
     if parsed_query.get('no-terminal', False):
         stdout = remove_ansi(stdout)
@@ -130,11 +126,13 @@ def _wego_postprocessing(location, parsed_query, stdout):
     if parsed_query.get('no-city', False):
         stdout = "\n".join(stdout.splitlines()[2:]) + "\n"
 
-    if full_address \
-        and parsed_query.get('format', 'txt') != 'png' \
-        and (not parsed_query.get('no-city')
-             and not parsed_query.get('no-caption')
-             and not parsed_query.get('days') == '0'):
+    if (
+        full_address
+        and parsed_query.get('format', 'txt') != 'png'
+        and not parsed_query.get('no-city')
+        and not parsed_query.get('no-caption')
+        and parsed_query.get('days') != '0'
+    ):
         line = "%s: %s [%s]\n" % (
             get_message('LOCATION', lang),
             full_address,

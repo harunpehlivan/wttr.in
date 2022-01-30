@@ -163,8 +163,7 @@ def get_output_format(query, parsed_query):
         return False
 
     user_agent = parsed_query.get("user_agent", "").lower()
-    html_output = not any(agent in user_agent for agent in PLAIN_TEXT_AGENTS)
-    return html_output
+    return all(agent not in user_agent for agent in PLAIN_TEXT_AGENTS)
 
 def _cyclic_location_selection(locations, period):
     """Return one of `locations` (: separated list)
@@ -229,17 +228,16 @@ def _response(parsed_query, query, fast_mode=False):
             #        output, options=parsed_query)
             result = TASKS.spawn(fmt.png.render_ansi, cache._update_answer(output), options=parsed_query)
             output = result.get()
-    else:
-        if query.get('days', '3') != '0' \
+    elif query.get('days', '3') != '0' \
             and not query.get('no-follow-line') \
             and ((parsed_query.get("view") or "v2")[:2] in ["v2", "v3"]):
-            if parsed_query['html_output']:
-                output = add_buttons(output)
-            else:
-                message = get_message('FOLLOW_ME', parsed_query['lang'])
-                if parsed_query.get('no-terminal', False):
-                    message = remove_ansi(message)
-                output += '\n' + message + '\n'
+        if parsed_query['html_output']:
+            output = add_buttons(output)
+        else:
+            message = get_message('FOLLOW_ME', parsed_query['lang'])
+            if parsed_query.get('no-terminal', False):
+                message = remove_ansi(message)
+            output += '\n' + message + '\n'
 
     return cache.store(cache_signature, output)
 
